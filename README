@@ -1,0 +1,25 @@
+*1 download Node.js from https://nodejs.org/en/ the LTS version
+
+*2 open node.js and install it
+
+*3 download the files into a folder on your pc
+
+*4 run the libs.cmd file to install all the libraries 
+
+*5 go to discord.com/developers/applications and create a new application 
+
+*6 click on the bot tab to create a discord bot and click copy token to copy the bot's token
+
+*7 put the bot's token inside the token.json file that inside the files folder where it says put-your-bot-token-here
+
+*8 save the file and close it
+
+*9 open the powershell of the folder and run node index.js
+
+*10 go back to the bot page on discord.com/developers and click url generator
+
+*11 checkmark application.commands and bot and give the bot any premissions that you want 
+
+*12 open the url discord generated and add the bot to any server you want 
+
+*13 type in the server's chat /create-poll and fill the info you want and press enter

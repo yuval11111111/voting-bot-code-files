@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@discordjs/rest": "^1.5.0",
+    "canvas": "^2.11.0",
+    "discord.js": "^14.7.1",
+    "fs": "^0.0.1-security",
+    "node": "^18.13.0",
+    "node_module": "^0.0.0",
+    "path": "^0.12.7"
+  }
+}
