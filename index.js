@@ -135,6 +135,19 @@ client.on(`ready`, () => {
     console.log(`bot is online`)
 })
 
+//id loader
+const ids = `./files/id.json`
+const img_num = `./files/serial.json`
+client.on(`messageUpdate`, (message,newm) => {
+    fs.readFile(ids, "utf8", (err, id) => {
+        fs.readFile(img_num, "utf8", (err, poll) => {
+            if (newm.content.includes(`poll id: ${poll}`)) {
+                fs.writeFileSync(ids, `\n${newm.channel.id}\n${newm.id}\n${amount}`)
+            }
+        })
+    })
+})
+
 //timer
 
 // Update the count down every 1 second
@@ -794,7 +807,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ephemeral: true
                         })
                         else {
-                            fs.writeFileSync(ids, id + `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                            fs.writeFileSync(ids, `${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
                             fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                             interaction.message.edit({
                                 content: interaction.message.content + `updating graph`,
@@ -980,7 +993,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ephemeral: true
                         })
                         else {
-                            fs.writeFileSync(ids, id + `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
                             fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                             interaction.message.edit({
                                 content: interaction.message.content + `updating graph`,
@@ -1165,7 +1178,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ephemeral: true
                         })
                         else {
-                            fs.writeFileSync(ids, id + `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
                             fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                             interaction.message.edit({
                                 content: interaction.message.content + `updating graph`,
@@ -1350,7 +1363,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ephemeral: true
                         })
                         else {
-                            fs.writeFileSync(ids, id + `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
                             fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                             interaction.message.edit({
                                 content: interaction.message.content + `updating graph`,
@@ -1535,7 +1548,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ephemeral: true
                         })
                         else {
-                            fs.writeFileSync(ids, id + `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
                             fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                             interaction.message.edit({
                                 content: interaction.message.content + `updating graph`,
