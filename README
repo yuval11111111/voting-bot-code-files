@@ -6,7 +6,7 @@
 
 *4 run the libs.cmd file to install all the libraries 
 
-*5 go to discord.com/developers/applications and create a new application 
+*5 go to https://discord.com/developers/applications and create a new application 
 
 *6 click on the bot tab to create a discord bot and click copy token to copy the bot's token
 

@@ -75,5 +75,8 @@ module.exports = {
         .addStringOption(option =>
             option.setName('option_5')
             .setRequired(false)
-            .setDescription('the fifth poll option'))
+                .setDescription('the fifth poll option'))
+        .addNumberOption(option =>
+            option.setName('time')
+                .setDescription(`time in minutes`))
 };
