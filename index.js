@@ -138,7 +138,7 @@ client.on(`ready`, () => {
 //id loader
 const ids = `./files/id.json`
 const img_num = `./files/serial.json`
-client.on(`messageUpdate`, (message,newm) => {
+client.on(`messageUpdate`, (message, newm) => {
     fs.readFile(ids, "utf8", (err, id) => {
         fs.readFile(img_num, "utf8", (err, poll) => {
             if (newm.content.includes(`poll id: ${poll}`)) {
@@ -148,303 +148,342 @@ client.on(`messageUpdate`, (message,newm) => {
     })
 })
 
-//timer
+//color invertor 
+function invertColor(hex) {
+    if (hex.indexOf('#') === 0) {
+        hex = hex.slice(1);
+    }
+    // convert 3-digit hex to 6-digits.
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length !== 6) {
+        throw new Error('Invalid HEX color.');
+    }
+    // invert color components
+    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+    // pad each with zeros and return
+    return '#' + padZero(r) + padZero(g) + padZero(b);
+}
+function padZero(str, len) {
+    len = len || 2;
+    var zeros = new Array(len).join('0');
+    return (zeros + str).slice(-len);
+}
 
+//timer
 // Update the count down every 1 second
 var x = setInterval(function () {
 
     const f = `./files/time.json`
     const ids = `./files/id.json`
     const votes = `./files/votes.json`
+    const url = `./files/img_url.json`
+    const dye = `./files/color.json`
 
     fs.readFile(f, "utf8", (err, time2) => {
         fs.readFile(ids, "utf8", (err, id) => {
             fs.readFile(votes, "utf8", (err, voteData) => {
-                if (!time2) return;
-                else if (time2 && time2 > 0) {
-                    let time = Number(time2)
-                    let time22 = time - 1
-                    fs.writeFileSync(f, `${time22}`)
-                    console.log(time)
-                } else if (time2 && time2 == 0) {
-                    console.log(`finish`)
-                    fs.writeFileSync(f, ``)
-                    let ID = id.split('\n').slice(3, 4)
-                    let messageID = id.split('\n').slice(2, 3).toString()
-                    let channelID = id.split('\n').slice(1, 2).toString()
-                    console.log(ID, messageID, channelID)
-                    if (!messageID) return;
-                    else {
-                        const m = client.channels.cache
-                            .get(channelID).messages.fetch(messageID)
+                fs.readFile(url, "utf8", (err, URL) => {
+                    fs.readFile(dye, "utf8", (err, color) => {
+                        if (!time2) return;
+                        else if (time2 && time2 > 0) {
+                            let time = Number(time2)
+                            let time22 = time - 1
+                            fs.writeFileSync(f, `${time22}`)
+                            console.log(time)
+                        } else if (time2 && time2 == 0) {
+                            console.log(`finish`)
+                            fs.writeFileSync(f, ``)
+                            let ID = id.split('\n').slice(3, 4)
+                            let messageID = id.split('\n').slice(2, 3).toString()
+                            let channelID = id.split('\n').slice(1, 2).toString()
+                            console.log(ID, messageID, channelID)
+                            if (!messageID) return;
+                            else {
+                                const m = client.channels.cache
+                                    .get(channelID).messages.fetch(messageID)
 
-                        Promise.resolve(m).then((value) => {
-                            value.edit({
-                                content: value.content + ` updating graph`,
-                                attachments: value.attachments,
-                                components: value.components
-                            }).catch(console.error)
-
-                            let bg = new Image()
-                            bg.src = `./images/poll_background.png`
-
-                            const bar_width = 0
-                            const bar_height = -80
-
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
-                            const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            console.log(val5)
-
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
-                                })
-
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
-                                    //vote 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val1, 300, 880, 50)
-                                    //vote 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val2, 700, 880, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
-                                    //vote 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val1, 250, 880, 50)
-                                    //vote 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val2, 500, 880, 50)
-                                    //vote 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val3, 750, 880, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
-                                    //vote 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val1, 200, 880, 50)
-                                    //vote 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val2, 400, 880, 50)
-                                    //vote 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val3, 600, 880, 50)
-                                    //vote 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val4, 800, 880, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
-                                    //vote 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val1, 180, 880, 50)
-                                    //vote 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val2, 340, 880, 50)
-                                    //vote 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val3, 500, 880, 50)
-                                    //vote 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val4, 660, 880, 50)
-                                    //vote 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#010101`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(val5, 820, 880, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                }
-
-                                setTimeout(() => {
+                                Promise.resolve(m).then((value) => {
                                     value.edit({
-                                        content: value.content.replace(/updating graph/g, ``) + ` total votes:**${tVal}**\n${VAL}\nended at **${new Date().toUTCString()}**`,
-                                        files: [at],
-                                        components: []
+                                        content: value.content + ` updating graph`,
+                                        attachments: value.attachments,
+                                        components: value.components
                                     }).catch(console.error)
 
+                                    color = (!color) ? `#f5f5f5` : color
+                                    console.log(color)
+
+                                    const invert = invertColor(color)
+
+                                    let bg = new Image()
+                                    let source = (!URL) ? `./images/poll_background.png` : URL
+                                    bg.src = source
+
+                                    console.log(URL)
+
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    console.log(val5)
+
+                                    const bar_width = 0
+                                    const bar_height = -800 / tVal
+
                                     setTimeout(() => {
-                                        const users = `./files/users.json`
-                                        const file3 = `./files/amount.json`
-                                        const file = `./files/votes.json`
-                                        fs.writeFileSync(file, `one = 0\ntwo = 0\nthree = 0\nfour = 0\nfive = 0\ntotal = 0`)
-                                        fs.writeFileSync(users, ``)
-                                        fs.writeFileSync(file3, ``)
-                                        fs.writeFileSync(ids, ``)
-                                        console.log(`finished`)
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
 
-                                    }, 100)
-                                }, 200)
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
 
-                            }, 6000)
-                        })
-                    }
-                }
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
+                                            //vote 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val1, 300, 880, 50)
+                                            //vote 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val2, 700, 880, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
+                                            //vote 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val1, 250, 880, 50)
+                                            //vote 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val2, 500, 880, 50)
+                                            //vote 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val3, 750, 880, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
+                                            //vote 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val1, 200, 880, 50)
+                                            //vote 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val2, 400, 880, 50)
+                                            //vote 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val3, 600, 880, 50)
+                                            //vote 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val4, 800, 880, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
+                                            //vote 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val1, 180, 880, 50)
+                                            //vote 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val2, 340, 880, 50)
+                                            //vote 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val3, 500, 880, 50)
+                                            //vote 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val4, 660, 880, 50)
+                                            //vote 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = invert
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(val5, 820, 880, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        }
+
+                                        setTimeout(() => {
+                                            value.edit({
+                                                content: value.content.replace(/updating graph/g, ``) + ` total votes:**${tVal}**\n${VAL}\nended at **${new Date().toUTCString()}**`,
+                                                files: [at],
+                                                components: []
+                                            }).catch(console.error)
+
+                                            setTimeout(() => {
+                                                const users = `./files/users.json`
+                                                const file3 = `./files/amount.json`
+                                                const file = `./files/votes.json`
+                                                fs.writeFileSync(file, `one = 0\ntwo = 0\nthree = 0\nfour = 0\nfive = 0\ntotal = 0`)
+                                                fs.writeFileSync(users, ``)
+                                                fs.writeFileSync(file3, ``)
+                                                fs.writeFileSync(ids, ``)
+                                                fs.writeFileSync(url, ``)
+                                                console.log(`finished`)
+
+                                            }, 300)
+                                        }, 200)
+
+                                    }, 6000)
+                                })
+                            }
+                        }
+                    })
+                })
             })
         })
     })
@@ -459,12 +498,14 @@ client.on(`interactionCreate`, (interaction) => {
     })
 })
 
-//creating a poll sheet
+//creating a poll sheet command
 client.on(`interactionCreate`, (interaction) => {
     if (interaction.commandName == `create-poll`) {
         const file = `./files/votes.json`
         const img_num = `./files/serial.json`
         const f = `./files/time.json`
+        const url = `./files/img_url.json`
+        const dye = `./files/color.json`
         fs.readFile(file, "utf8", (err, voteData) => {
             fs.readFile(img_num, "utf8", (err, serial) => {
                 let name = interaction.options.getString(`poll_name`, true)
@@ -474,12 +515,23 @@ client.on(`interactionCreate`, (interaction) => {
                 let four = (interaction.options.getString(`option_4`, false) == null) ? `none` : interaction.options.getString(`option_4`, false)
                 let five = (interaction.options.getString(`option_5`, false) == null) ? `none` : interaction.options.getString(`option_5`, false)
                 let time = interaction.options.getNumber(`time`, false)
+                let Url = interaction.options.getString(`background_url`, false)
+                let color = interaction.options.getString(`graph-color`, false)
+
+                color = (!color) ? `#f5f5f5` : color
+
+                fs.writeFileSync(dye, color)
 
                 const total = voteData.split(`=`).slice(6, 7).toString()
                 const tVal = Number(total)
 
                 let bg = new Image()
-                bg.src = `./images/poll_background.png`
+                let source = (!Url) ? `./images/poll_background.png` : Url
+                bg.src = source
+
+                let sSave = (source == `./images/poll_background.png`) ? `` : Url
+
+                fs.writeFileSync(url, sSave)
 
                 const bar_width = 0
                 const bar_height = -80
@@ -635,19 +687,19 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.lineJoin = `miter`
                             ctx.lineWidth = 109
 
-                            ctx.strokeStyle = `#f5f5f5`
+                            ctx.strokeStyle = color
                             //bar 1
                             ctx.strokeRect(300, 900, bar_width, bar_height)
                             //bar 2
                             ctx.strokeRect(700, 900, bar_width, bar_height)
                             //text 1
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`1`, 300, 960, 50)
                             //text 2
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`2`, 700, 960, 50)
 
@@ -659,7 +711,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.lineJoin = `miter`
                             ctx.lineWidth = 109
 
-                            ctx.strokeStyle = `#f5f5f5`
+                            ctx.strokeStyle = color
                             //bar 1
                             ctx.strokeRect(250, 900, bar_width, bar_height)
                             //bar 2
@@ -668,17 +720,17 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.strokeRect(750, 900, bar_width, bar_height)
                             //text 1
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`1`, 250, 960, 50)
                             //text 2
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`2`, 500, 960, 50)
                             //text 3
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`3`, 750, 960, 50)
 
@@ -689,7 +741,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.lineJoin = `miter`
                             ctx.lineWidth = 109
 
-                            ctx.strokeStyle = `#f5f5f5`
+                            ctx.strokeStyle = color
                             //bar 1
                             ctx.strokeRect(200, 900, bar_width, bar_height)
                             //bar 2
@@ -700,22 +752,22 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.strokeRect(800, 900, bar_width, bar_height)
                             //text 1
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`1`, 200, 960, 50)
                             //text 2
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`2`, 400, 960, 50)
                             //text 3
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`3`, 600, 960, 50)
                             //text 4
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`4`, 800, 960, 50)
 
@@ -727,7 +779,7 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.lineJoin = `miter`
                             ctx.lineWidth = 109
 
-                            ctx.strokeStyle = `#f5f5f5`
+                            ctx.strokeStyle = color
                             //bar 1
                             ctx.strokeRect(180, 900, bar_width, bar_height)
                             //bar 2
@@ -740,27 +792,27 @@ client.on(`interactionCreate`, (interaction) => {
                             ctx.strokeRect(820, 900, bar_width, bar_height)
                             //text 1
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`1`, 180, 960, 50)
                             //text 2
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`2`, 340, 960, 50)
                             //text 3
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`3`, 500, 960, 50)
                             //text 4
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`4`, 660, 960, 50)
                             //text 5
                             ctx.font = "bold 50px gg sans"
-                            ctx.fillStyle = `#f5f5f5`
+                            ctx.fillStyle = color
                             ctx.textAlign = "center"
                             ctx.fillText(`5`, 820, 960, 50)
 
@@ -788,1202 +840,1216 @@ client.on(`interactionCreate`, (interaction) => {
         const file = `./files/votes.json`
         const users = `./files/users.json`
         const ids = `./files/id.json`
+        const url = `./files/img_url.json`
+        const dye = `./files/color.json`
 
         fs.readFile(file, "utf8", (err, voteData) => {
             fs.readFile(users, "utf8", (err, user) => {
                 fs.readFile(ids, "utf8", (err, id) => {
-                    let bg = new Image()
-                    bg.src = `./images/poll_background.png`
-                    const total = voteData.split(`=`).slice(6, 7).toString()
-                    let tVal = Number(total)
+                    fs.readFile(url, "utf8", (err, URL) => {
+                        fs.readFile(dye, "utf8", (err, color) => {
+                            let bg = new Image()
+                            let source = (!URL) ? `./images/poll_background.png` : URL
+                            bg.src = source
 
-                    const bar_width = 0
-                    const bar_height = -800 / tVal
+                            color = (!color) ? `#f5f5f5` : color
+                            console.log(color)
 
+                            const invert = invertColor(color)
 
-                    if (interaction.customId == `one`) {
-                        if (user.includes(interaction.user.id)) return interaction.reply({
-                            content: `You have already voted`,
-                            ephemeral: true
-                        })
-                        else {
-                            fs.writeFileSync(ids, `${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
-                            fs.writeFileSync(users, user + `\n${interaction.user.id}`)
-                            interaction.message.edit({
-                                content: interaction.message.content + `updating graph`,
-                                attachments: interaction.message.attachments,
-                                components: interaction.message.components
-                            }).catch(console.error)
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
                             const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            const One = voteData.replace(`one = ${val1}`, `one = ${val1 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
-                            fs.writeFileSync(file, One)
-                            console.log(amount)
+                            let tVal = Number(total)
 
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
+                            const bar_width = 0
+                            const bar_height = -800 / tVal
+
+
+                            if (interaction.customId == `one`) {
+                                if (user.includes(interaction.user.id)) return interaction.reply({
+                                    content: `You have already voted`,
+                                    ephemeral: true
                                 })
-
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                }
-
-                                setTimeout(() => {
+                                else {
+                                    fs.writeFileSync(ids, `${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                                    fs.writeFileSync(users, user + `\n${interaction.user.id}`)
                                     interaction.message.edit({
-                                        content: interaction.message.content.replace(`updating graph`, ``),
-                                        files: [at],
+                                        content: interaction.message.content + `updating graph`,
+                                        attachments: interaction.message.attachments,
                                         components: interaction.message.components
                                     }).catch(console.error)
-                                }, 200)
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    const One = voteData.replace(`one = ${val1}`, `one = ${val1 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
+                                    fs.writeFileSync(file, One)
+                                    console.log(amount)
 
-                            }, 6000)
-                        }
-                    }
-                    if (interaction.customId == `two`) {
-                        if (user.includes(interaction.user.id)) return interaction.reply({
-                            content: `You have already voted`,
-                            ephemeral: true
-                        })
-                        else {
-                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
-                            fs.writeFileSync(users, user + `\n${interaction.user.id}`)
-                            interaction.message.edit({
-                                content: interaction.message.content + `updating graph`,
-                                attachments: interaction.message.attachments,
-                                components: interaction.message.components
-                            }).catch(console.error)
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
-                            const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            const Two = voteData.replace(`two = ${val2}`, `two = ${val2 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
-                            fs.writeFileSync(file, Two)
+                                    setTimeout(() => {
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
 
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
-                                })
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
 
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
 
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
 
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
 
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
 
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
 
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
 
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
 
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
 
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
 
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
 
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
 
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
 
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
 
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
 
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        }
 
+                                        setTimeout(() => {
+                                            interaction.message.edit({
+                                                content: interaction.message.content.replace(`updating graph`, ``),
+                                                files: [at],
+                                                components: interaction.message.components
+                                            }).catch(console.error)
+                                        }, 200)
+
+                                    }, 6000)
                                 }
-
-                                setTimeout(() => {
-                                    interaction.message.edit({
-                                        content: interaction.message.content.replace(`updating graph`, ``),
-                                        files: [at],
-                                        components: interaction.message.components
-                                    }).catch(console.error)
-                                }, 100)
-
-                            }, 6000)
-                        }
-                    }
-                    if (interaction.customId == `three`) {
-                        if (user.includes(interaction.user.id)) return interaction.reply({
-                            content: `You have already voted`,
-                            ephemeral: true
-                        })
-                        else {
-                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
-                            fs.writeFileSync(users, user + `\n${interaction.user.id}`)
-                            interaction.message.edit({
-                                content: interaction.message.content + `updating graph`,
-                                attachments: interaction.message.attachments,
-                                components: interaction.message.components
-                            }).catch(console.error)
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
-                            const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            const Three = voteData.replace(`three = ${val3}`, `three = ${val3 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
-                            fs.writeFileSync(file, Three)
-
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
-                                })
-
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                }
-
-                                setTimeout(() => {
-                                    interaction.message.edit({
-                                        content: interaction.message.content.replace(`updating graph`, ``),
-                                        files: [at],
-                                        components: interaction.message.components
-                                    }).catch(console.error)
-                                }, 100)
-
-                            }, 6000)
-                        }
-                    }
-                    if (interaction.customId == `four`) {
-                        if (user.includes(interaction.user.id)) return interaction.reply({
-                            content: `You have already voted`,
-                            ephemeral: true
-                        })
-                        else {
-                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
-                            fs.writeFileSync(users, user + `\n${interaction.user.id}`)
-                            interaction.message.edit({
-                                content: interaction.message.content + `updating graph`,
-                                attachments: interaction.message.attachments,
-                                components: interaction.message.components
-                            }).catch(console.error)
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
-                            const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            const Four = voteData.replace(`four = ${val4}`, `four = ${val4 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
-                            fs.writeFileSync(file, Four)
-
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
-                                })
-
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                }
-
-                                setTimeout(() => {
-                                    interaction.message.edit({
-                                        content: interaction.message.content.replace(`updating graph`, ``),
-                                        files: [at],
-                                        components: interaction.message.components
-                                    }).catch(console.error)
-                                }, 100)
-
-                            }, 6000)
-                        }
-                    }
-                    if (interaction.customId == `five`) {
-                        if (user.includes(interaction.user.id)) return interaction.reply({
-                            content: `You have already voted`,
-                            ephemeral: true
-                        })
-                        else {
-                            fs.writeFileSync(ids,`\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
-                            fs.writeFileSync(users, user + `\n${interaction.user.id}`)
-                            interaction.message.edit({
-                                content: interaction.message.content + `updating graph`,
-                                attachments: interaction.message.attachments,
-                                components: interaction.message.components
-                            }).catch(console.error)
-
-                            const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                            const val1 = Number(one)
-                            const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                            const val2 = Number(two)
-                            const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                            const val3 = Number(three)
-                            const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                            const val4 = Number(four)
-                            const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                            const val5 = Number(five)
-                            const total = voteData.split(`=`).slice(6, 7).toString()
-                            const tVal = Number(total)
-                            console.log(val5)
-                            const Five = voteData.replace(`five = ${val5}`, `five = ${val5 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
-                            fs.writeFileSync(file, Five)
-
-                            setTimeout(() => {
-                                registerFont('./ggsans-Bold.ttf', {
-                                    family: 'gg sans'
-                                })
-
-                                const canvas = createCanvas(1000, 1000)
-                                const ctx = canvas.getContext('2d')
-                                if (amount == 2) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 300, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 700, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 3) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 250, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 500, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 750, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                                } else if (amount == 4) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 200, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 400, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 600, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 800, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                } else if (amount == 5) {
-                                    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                    ctx.lineJoin = `miter`
-                                    ctx.lineWidth = 109
-
-                                    ctx.strokeStyle = `#f5f5f5`
-                                    //bar 1
-                                    ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                    //bar 2
-                                    ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                    //bar 3
-                                    ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                    //bar 4
-                                    ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                    //bar 5
-                                    ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                    //text 1
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`1`, 180, 960, 50)
-                                    //text 2
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`2`, 340, 960, 50)
-                                    //text 3
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`3`, 500, 960, 50)
-                                    //text 4
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`4`, 660, 960, 50)
-                                    //text 5
-                                    ctx.font = "bold 50px gg sans"
-                                    ctx.fillStyle = `#f5f5f5`
-                                    ctx.textAlign = "center"
-                                    ctx.fillText(`5`, 820, 960, 50)
-
-                                    var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                                }
-
-                                setTimeout(() => {
-                                    interaction.message.edit({
-                                        content: interaction.message.content.replace(`updating graph`, ``),
-                                        files: [at],
-                                        components: interaction.message.components
-                                    }).catch(console.error)
-                                }, 100)
-
-                            }, 6000)
-                        }
-                    } else if (interaction.customId == `end`) {
-                        interaction.message.edit({
-                            content: interaction.message.content + `updating graph`,
-                            attachments: interaction.message.attachments,
-                            components: interaction.message.components
-                        }).catch(console.error)
-
-                        const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
-                        const val1 = Number(one)
-                        const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
-                        const val2 = Number(two)
-                        const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
-                        const val3 = Number(three)
-                        const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
-                        const val4 = Number(four)
-                        const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
-                        const val5 = Number(five)
-                        const total = voteData.split(`=`).slice(6, 7).toString()
-                        const tVal = Number(total)
-                        console.log(val5)
-
-                        setTimeout(() => {
-                            registerFont('./ggsans-Bold.ttf', {
-                                family: 'gg sans'
-                            })
-
-                            const canvas = createCanvas(1000, 1000)
-                            const ctx = canvas.getContext('2d')
-                            if (amount == 2) {
-                                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                ctx.lineJoin = `miter`
-                                ctx.lineWidth = 109
-
-                                ctx.strokeStyle = `#f5f5f5`
-                                //bar 1
-                                ctx.strokeRect(300, 900, bar_width, bar_height * val1)
-                                //bar 2
-                                ctx.strokeRect(700, 900, bar_width, bar_height * val2)
-                                //text 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`1`, 300, 960, 50)
-                                //text 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`2`, 700, 960, 50)
-                                //vote 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val1, 300, 880, 50)
-                                //vote 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val2, 700, 880, 50)
-
-                                var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                            } else if (amount == 3) {
-                                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                ctx.lineJoin = `miter`
-                                ctx.lineWidth = 109
-
-                                ctx.strokeStyle = `#f5f5f5`
-                                //bar 1
-                                ctx.strokeRect(250, 900, bar_width, bar_height * val1)
-                                //bar 2
-                                ctx.strokeRect(500, 900, bar_width, bar_height * val2)
-                                //bar 3
-                                ctx.strokeRect(750, 900, bar_width, bar_height * val3)
-                                //text 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`1`, 250, 960, 50)
-                                //text 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`2`, 500, 960, 50)
-                                //text 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`3`, 750, 960, 50)
-                                //vote 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val1, 250, 880, 50)
-                                //vote 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val2, 500, 880, 50)
-                                //vote 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val3, 750, 880, 50)
-
-                                var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-                            } else if (amount == 4) {
-                                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                ctx.lineJoin = `miter`
-                                ctx.lineWidth = 109
-
-                                ctx.strokeStyle = `#f5f5f5`
-                                //bar 1
-                                ctx.strokeRect(200, 900, bar_width, bar_height * val1)
-                                //bar 2
-                                ctx.strokeRect(400, 900, bar_width, bar_height * val2)
-                                //bar 3
-                                ctx.strokeRect(600, 900, bar_width, bar_height * val3)
-                                //bar 4
-                                ctx.strokeRect(800, 900, bar_width, bar_height * val4)
-                                //text 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`1`, 200, 960, 50)
-                                //text 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`2`, 400, 960, 50)
-                                //text 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`3`, 600, 960, 50)
-                                //text 4
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`4`, 800, 960, 50)
-                                //vote 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val1, 200, 880, 50)
-                                //vote 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val2, 400, 880, 50)
-                                //vote 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val3, 600, 880, 50)
-                                //vote 4
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val4, 800, 880, 50)
-
-                                var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
-                            } else if (amount == 5) {
-                                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
-
-                                ctx.lineJoin = `miter`
-                                ctx.lineWidth = 109
-
-                                ctx.strokeStyle = `#f5f5f5`
-                                //bar 1
-                                ctx.strokeRect(180, 900, bar_width, bar_height * val1)
-                                //bar 2
-                                ctx.strokeRect(340, 900, bar_width, bar_height * val2)
-                                //bar 3
-                                ctx.strokeRect(500, 900, bar_width, bar_height * val3)
-                                //bar 4
-                                ctx.strokeRect(660, 900, bar_width, bar_height * val4)
-                                //bar 5
-                                ctx.strokeRect(820, 900, bar_width, bar_height * val5)
-                                //text 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`1`, 180, 960, 50)
-                                //text 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`2`, 340, 960, 50)
-                                //text 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`3`, 500, 960, 50)
-                                //text 4
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`4`, 660, 960, 50)
-                                //text 5
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#f5f5f5`
-                                ctx.textAlign = "center"
-                                ctx.fillText(`5`, 820, 960, 50)
-                                //vote 1
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val1, 180, 880, 50)
-                                //vote 2
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val2, 340, 880, 50)
-                                //vote 3
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val3, 500, 880, 50)
-                                //vote 4
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val4, 660, 880, 50)
-                                //vote 5
-                                ctx.font = "bold 50px gg sans"
-                                ctx.fillStyle = `#010101`
-                                ctx.textAlign = "center"
-                                ctx.fillText(val5, 820, 880, 50)
-
-                                var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
-
                             }
+                            if (interaction.customId == `two`) {
+                                if (user.includes(interaction.user.id)) return interaction.reply({
+                                    content: `You have already voted`,
+                                    ephemeral: true
+                                })
+                                else {
+                                    fs.writeFileSync(ids, `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                                    fs.writeFileSync(users, user + `\n${interaction.user.id}`)
+                                    interaction.message.edit({
+                                        content: interaction.message.content + `updating graph`,
+                                        attachments: interaction.message.attachments,
+                                        components: interaction.message.components
+                                    }).catch(console.error)
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    const Two = voteData.replace(`two = ${val2}`, `two = ${val2 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
+                                    fs.writeFileSync(file, Two)
 
-                            setTimeout(() => {
+                                    setTimeout(() => {
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
+
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        }
+
+                                        setTimeout(() => {
+                                            interaction.message.edit({
+                                                content: interaction.message.content.replace(`updating graph`, ``),
+                                                files: [at],
+                                                components: interaction.message.components
+                                            }).catch(console.error)
+                                        }, 100)
+
+                                    }, 6000)
+                                }
+                            }
+                            if (interaction.customId == `three`) {
+                                if (user.includes(interaction.user.id)) return interaction.reply({
+                                    content: `You have already voted`,
+                                    ephemeral: true
+                                })
+                                else {
+                                    fs.writeFileSync(ids, `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                                    fs.writeFileSync(users, user + `\n${interaction.user.id}`)
+                                    interaction.message.edit({
+                                        content: interaction.message.content + `updating graph`,
+                                        attachments: interaction.message.attachments,
+                                        components: interaction.message.components
+                                    }).catch(console.error)
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    const Three = voteData.replace(`three = ${val3}`, `three = ${val3 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
+                                    fs.writeFileSync(file, Three)
+
+                                    setTimeout(() => {
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
+
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        }
+
+                                        setTimeout(() => {
+                                            interaction.message.edit({
+                                                content: interaction.message.content.replace(`updating graph`, ``),
+                                                files: [at],
+                                                components: interaction.message.components
+                                            }).catch(console.error)
+                                        }, 100)
+
+                                    }, 6000)
+                                }
+                            }
+                            if (interaction.customId == `four`) {
+                                if (user.includes(interaction.user.id)) return interaction.reply({
+                                    content: `You have already voted`,
+                                    ephemeral: true
+                                })
+                                else {
+                                    fs.writeFileSync(ids, `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                                    fs.writeFileSync(users, user + `\n${interaction.user.id}`)
+                                    interaction.message.edit({
+                                        content: interaction.message.content + `updating graph`,
+                                        attachments: interaction.message.attachments,
+                                        components: interaction.message.components
+                                    }).catch(console.error)
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    const Four = voteData.replace(`four = ${val4}`, `four = ${val4 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
+                                    fs.writeFileSync(file, Four)
+
+                                    setTimeout(() => {
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
+
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        }
+
+                                        setTimeout(() => {
+                                            interaction.message.edit({
+                                                content: interaction.message.content.replace(`updating graph`, ``),
+                                                files: [at],
+                                                components: interaction.message.components
+                                            }).catch(console.error)
+                                        }, 100)
+
+                                    }, 6000)
+                                }
+                            }
+                            if (interaction.customId == `five`) {
+                                if (user.includes(interaction.user.id)) return interaction.reply({
+                                    content: `You have already voted`,
+                                    ephemeral: true
+                                })
+                                else {
+                                    fs.writeFileSync(ids, `\n${interaction.channel.id}\n${interaction.message.id}\n${amount}`)
+                                    fs.writeFileSync(users, user + `\n${interaction.user.id}`)
+                                    interaction.message.edit({
+                                        content: interaction.message.content + `updating graph`,
+                                        attachments: interaction.message.attachments,
+                                        components: interaction.message.components
+                                    }).catch(console.error)
+
+                                    const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                    const val1 = Number(one)
+                                    const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                    const val2 = Number(two)
+                                    const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                    const val3 = Number(three)
+                                    const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                    const val4 = Number(four)
+                                    const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                    const val5 = Number(five)
+                                    const total = voteData.split(`=`).slice(6, 7).toString()
+                                    const tVal = Number(total)
+                                    console.log(val5)
+                                    const Five = voteData.replace(`five = ${val5}`, `five = ${val5 + 1}`).replace(`total = ${tVal}`, `total = ${tVal + 1}`)
+                                    fs.writeFileSync(file, Five)
+
+                                    setTimeout(() => {
+                                        registerFont('./ggsans-Bold.ttf', {
+                                            family: 'gg sans'
+                                        })
+
+                                        const canvas = createCanvas(1000, 1000)
+                                        const ctx = canvas.getContext('2d')
+                                        if (amount == 2) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 300, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 700, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 3) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 250, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 500, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 750, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                        } else if (amount == 4) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 200, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 400, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 600, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 800, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        } else if (amount == 5) {
+                                            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                            ctx.lineJoin = `miter`
+                                            ctx.lineWidth = 109
+
+                                            ctx.strokeStyle = color
+                                            //bar 1
+                                            ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                            //bar 2
+                                            ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                            //bar 3
+                                            ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                            //bar 4
+                                            ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                            //bar 5
+                                            ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                            //text 1
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`1`, 180, 960, 50)
+                                            //text 2
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`2`, 340, 960, 50)
+                                            //text 3
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`3`, 500, 960, 50)
+                                            //text 4
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`4`, 660, 960, 50)
+                                            //text 5
+                                            ctx.font = "bold 50px gg sans"
+                                            ctx.fillStyle = color
+                                            ctx.textAlign = "center"
+                                            ctx.fillText(`5`, 820, 960, 50)
+
+                                            var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                        }
+
+                                        setTimeout(() => {
+                                            interaction.message.edit({
+                                                content: interaction.message.content.replace(`updating graph`, ``),
+                                                files: [at],
+                                                components: interaction.message.components
+                                            }).catch(console.error)
+                                        }, 100)
+
+                                    }, 6000)
+                                }
+                            } else if (interaction.customId == `end`) {
                                 interaction.message.edit({
-                                    content: interaction.message.content.replace(/updating graph/g, ``) + ` total votes:**${tVal}**\n${VAL}\nended at **${new Date().toUTCString()}**`,
-                                    files: [at],
-                                    components: []
+                                    content: interaction.message.content + `updating graph`,
+                                    attachments: interaction.message.attachments,
+                                    components: interaction.message.components
                                 }).catch(console.error)
 
-                                setTimeout(() => {
-                                    const users = `./files/users.json`
-                                    const file3 = `./files/amount.json`
-                                    fs.writeFileSync(file, `one = 0\ntwo = 0\nthree = 0\nfour = 0\nfive = 0\ntotal = 0`)
-                                    fs.writeFileSync(users, ``)
-                                    fs.writeFileSync(file3, ``)
-                                    fs.writeFileSync(ids, ``)
-                                }, 100)
-                            }, 200)
+                                const one = voteData.split(`=`).slice(1, 2).toString().replace(`\ntwo`, ``)
+                                const val1 = Number(one)
+                                const two = voteData.split(`=`).slice(2, 3).toString().replace(`\nthree`, ``)
+                                const val2 = Number(two)
+                                const three = voteData.split(`=`).slice(3, 4).toString().replace(`\nfour`, ``)
+                                const val3 = Number(three)
+                                const four = voteData.split(`=`).slice(4, 5).toString().replace(`\nfive`, ``)
+                                const val4 = Number(four)
+                                const five = voteData.split(`=`).slice(5, 6).toString().replace(`\ntotal`, ``)
+                                const val5 = Number(five)
+                                const total = voteData.split(`=`).slice(6, 7).toString()
+                                const tVal = Number(total)
+                                console.log(val5)
 
-                        }, 6000)
-                    }
+                                setTimeout(() => {
+                                    registerFont('./ggsans-Bold.ttf', {
+                                        family: 'gg sans'
+                                    })
+
+                                    const canvas = createCanvas(1000, 1000)
+                                    const ctx = canvas.getContext('2d')
+                                    if (amount == 2) {
+                                        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                        ctx.lineJoin = `miter`
+                                        ctx.lineWidth = 109
+
+                                        ctx.strokeStyle = color
+                                        //bar 1
+                                        ctx.strokeRect(300, 900, bar_width, bar_height * val1)
+                                        //bar 2
+                                        ctx.strokeRect(700, 900, bar_width, bar_height * val2)
+                                        //text 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`1`, 300, 960, 50)
+                                        //text 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`2`, 700, 960, 50)
+                                        //vote 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val1, 300, 880, 50)
+                                        //vote 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val2, 700, 880, 50)
+
+                                        var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                    } else if (amount == 3) {
+                                        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                        ctx.lineJoin = `miter`
+                                        ctx.lineWidth = 109
+
+                                        ctx.strokeStyle = color
+                                        //bar 1
+                                        ctx.strokeRect(250, 900, bar_width, bar_height * val1)
+                                        //bar 2
+                                        ctx.strokeRect(500, 900, bar_width, bar_height * val2)
+                                        //bar 3
+                                        ctx.strokeRect(750, 900, bar_width, bar_height * val3)
+                                        //text 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`1`, 250, 960, 50)
+                                        //text 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`2`, 500, 960, 50)
+                                        //text 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`3`, 750, 960, 50)
+                                        //vote 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val1, 250, 880, 50)
+                                        //vote 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val2, 500, 880, 50)
+                                        //vote 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val3, 750, 880, 50)
+
+                                        var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+                                    } else if (amount == 4) {
+                                        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                        ctx.lineJoin = `miter`
+                                        ctx.lineWidth = 109
+
+                                        ctx.strokeStyle = color
+                                        //bar 1
+                                        ctx.strokeRect(200, 900, bar_width, bar_height * val1)
+                                        //bar 2
+                                        ctx.strokeRect(400, 900, bar_width, bar_height * val2)
+                                        //bar 3
+                                        ctx.strokeRect(600, 900, bar_width, bar_height * val3)
+                                        //bar 4
+                                        ctx.strokeRect(800, 900, bar_width, bar_height * val4)
+                                        //text 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`1`, 200, 960, 50)
+                                        //text 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`2`, 400, 960, 50)
+                                        //text 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`3`, 600, 960, 50)
+                                        //text 4
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`4`, 800, 960, 50)
+                                        //vote 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val1, 200, 880, 50)
+                                        //vote 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val2, 400, 880, 50)
+                                        //vote 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val3, 600, 880, 50)
+                                        //vote 4
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val4, 800, 880, 50)
+
+                                        var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                    } else if (amount == 5) {
+                                        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+                                        ctx.lineJoin = `miter`
+                                        ctx.lineWidth = 109
+
+                                        ctx.strokeStyle = color
+                                        //bar 1
+                                        ctx.strokeRect(180, 900, bar_width, bar_height * val1)
+                                        //bar 2
+                                        ctx.strokeRect(340, 900, bar_width, bar_height * val2)
+                                        //bar 3
+                                        ctx.strokeRect(500, 900, bar_width, bar_height * val3)
+                                        //bar 4
+                                        ctx.strokeRect(660, 900, bar_width, bar_height * val4)
+                                        //bar 5
+                                        ctx.strokeRect(820, 900, bar_width, bar_height * val5)
+                                        //text 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`1`, 180, 960, 50)
+                                        //text 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`2`, 340, 960, 50)
+                                        //text 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`3`, 500, 960, 50)
+                                        //text 4
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`4`, 660, 960, 50)
+                                        //text 5
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = color
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(`5`, 820, 960, 50)
+                                        //vote 1
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val1, 180, 880, 50)
+                                        //vote 2
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val2, 340, 880, 50)
+                                        //vote 3
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val3, 500, 880, 50)
+                                        //vote 4
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val4, 660, 880, 50)
+                                        //vote 5
+                                        ctx.font = "bold 50px gg sans"
+                                        ctx.fillStyle = invert
+                                        ctx.textAlign = "center"
+                                        ctx.fillText(val5, 820, 880, 50)
+
+                                        var at = new Discord.AttachmentBuilder(canvas.toBuffer(), `poll-1.png`)
+
+                                    }
+
+                                    setTimeout(() => {
+                                        interaction.message.edit({
+                                            content: interaction.message.content.replace(/updating graph/g, ``) + ` total votes:**${tVal}**\n${VAL}\nended at **${new Date().toUTCString()}**`,
+                                            files: [at],
+                                            components: []
+                                        }).catch(console.error)
+
+                                        setTimeout(() => {
+                                            const users = `./files/users.json`
+                                            const file3 = `./files/amount.json`
+                                            fs.writeFileSync(file, `one = 0\ntwo = 0\nthree = 0\nfour = 0\nfive = 0\ntotal = 0`)
+                                            fs.writeFileSync(users, ``)
+                                            fs.writeFileSync(file3, ``)
+                                            fs.writeFileSync(ids, ``)
+                                            fs.writeFileSync(url, ``)
+                                        }, 100)
+                                    }, 200)
+
+                                }, 6000)
+                            }
+                        })
+                    })
                 })
             })
         })

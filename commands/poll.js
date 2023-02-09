@@ -75,8 +75,30 @@ module.exports = {
         .addStringOption(option =>
             option.setName('option_5')
             .setRequired(false)
-                .setDescription('the fifth poll option'))
+            .setDescription('the fifth poll option'))
         .addNumberOption(option =>
             option.setName('time')
-                .setDescription(`time in minutes`))
+            .setDescription(`time in minutes`))
+        .addStringOption(option =>
+            option.setName('background_url')
+            .setDescription('the background url'))
+        .addStringOption(option =>
+            option.setName('graph-color')
+            .setDescription(`choose a graph color`)
+            .addChoices({
+                name: `red`,
+                value: `#ff0101`
+            }, {
+                name: `green`,
+                value: `#01ff01`
+            }, {
+                name: `blue`,
+                value: `#0101ff`
+            }, {
+                name: `black`,
+                value: `#121212`
+            }, {
+                name: `white`,
+                value: `#f5f5f5`
+            }))
 };
